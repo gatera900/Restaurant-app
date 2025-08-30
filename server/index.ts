@@ -1,17 +1,21 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+<<<<<<< HEAD
 
 // Check for required environment variables
 if (!process.env.DATABASE_URL) {
   log("WARNING: DATABASE_URL not set, using in-memory storage", "config");
 }
 
+=======
+  
+>>>>>>> 87763adc0179532e2a873b6ba77a0aeaad984be6
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
+app.use((req, res, next) => { 
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
