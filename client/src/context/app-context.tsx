@@ -1,68 +1,73 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-
-interface AppContextType {
-  cart: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (itemId: number) => void;
-  updateCartQuantity: (itemId: number, quantity: number) => void;
-  clearCart: () => void;
-  cartTotal: number;
-  currentUser: User | null;
-  setCurrentUser: (user: User | null) => void;
-}
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface CartItem {
-  menuItemId: number;
+  id: number;
   name: string;
   price: number;
   quantity: number;
-  customizations?: string;
 }
 
 interface User {
   id: number;
   username: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
   role: string;
+}
+
+interface AppContextType {
+  cart: CartItem[];
+  currentUser: User | null;
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  removeFromCart: (id: number) => void;
+  updateCartItemQuantity: (id: number, quantity: number) => void;
+  clearCart: () => void;
+  login: (user: User) => void;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function useApp() {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+}
+
+interface AppProviderProps {
+  children: ReactNode;
+}
+
+export function AppProvider({ children }: AppProviderProps) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const addToCart = (item: CartItem) => {
+  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.menuItemId === item.menuItemId);
-      
+      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
       if (existingItem) {
         return prevCart.map(cartItem =>
-          cartItem.menuItemId === item.menuItemId
-            ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         );
-      } else {
-        return [...prevCart, item];
       }
+      return [...prevCart, { ...item, quantity: 1 }];
     });
   };
 
-  const removeFromCart = (itemId: number) => {
-    setCart(prevCart => prevCart.filter(item => item.menuItemId !== itemId));
+  const removeFromCart = (id: number) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== id));
   };
 
-  const updateCartQuantity = (itemId: number, quantity: number) => {
+  const updateCartItemQuantity = (id: number, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(itemId);
+      removeFromCart(id);
       return;
     }
-    
     setCart(prevCart =>
       prevCart.map(item =>
-        item.menuItemId === itemId ? { ...item, quantity } : item
+        item.id === id ? { ...item, quantity } : item
       )
     );
   };
@@ -71,30 +76,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCart([]);
   };
 
-  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const login = (user: User) => {
+    setCurrentUser(user);
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    clearCart();
+  };
+
+  const value: AppContextType = {
+    cart,
+    currentUser,
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    clearCart,
+    login,
+    logout,
+  };
 
   return (
-    <AppContext.Provider
-      value={{
-        cart,
-        addToCart,
-        removeFromCart,
-        updateCartQuantity,
-        clearCart,
-        cartTotal,
-        currentUser,
-        setCurrentUser,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
-}
-
-export function useApp() {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
-  return context;
 }

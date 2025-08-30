@@ -1,46 +1,73 @@
-import { 
-  users, menuItems, orders, farmStats, reviews, aiRecommendations, chatMessages,
-  type User, type InsertUser, type MenuItem, type InsertMenuItem, 
-  type Order, type InsertOrder, type FarmStats, type InsertFarmStats,
-  type Review, type InsertReview, type AIRecommendation, type ChatMessage, type InsertChatMessage
+import {
+  users,
+  menuItems,
+  orders,
+  farmStats,
+  reviews,
+  aiRecommendations,
+  chatMessages,
+  type User,
+  type InsertUser,
+  type MenuItem,
+  type InsertMenuItem,
+  type Order,
+  type InsertOrder,
+  type FarmStats,
+  type InsertFarmStats,
+  type Review,
+  type InsertReview,
+  type AIRecommendation,
+  type ChatMessage,
+  type InsertChatMessage,
 } from "@shared/schema";
+
+// Check if we have database connection
+const hasDatabase = process.env.DATABASE_URL;
 
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Menu Items
   getMenuItems(): Promise<MenuItem[]>;
   getMenuItemsByCategory(category: string): Promise<MenuItem[]>;
   getMenuItem(id: number): Promise<MenuItem | undefined>;
   createMenuItem(item: InsertMenuItem): Promise<MenuItem>;
-  updateMenuItem(id: number, updates: Partial<MenuItem>): Promise<MenuItem | undefined>;
+  updateMenuItem(
+    id: number,
+    updates: Partial<MenuItem>
+  ): Promise<MenuItem | undefined>;
   deleteMenuItem(id: number): Promise<boolean>;
-  
+
   // Orders
   getOrders(): Promise<Order[]>;
   getOrdersByUser(userId: number): Promise<Order[]>;
   getOrder(id: number): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
-  
+
   // Farm Stats
   getFarmStats(): Promise<FarmStats[]>;
   getFarmStatsByType(cropType: string): Promise<FarmStats[]>;
   createFarmStats(stats: InsertFarmStats): Promise<FarmStats>;
-  updateFarmStats(id: number, updates: Partial<FarmStats>): Promise<FarmStats | undefined>;
-  
+  updateFarmStats(
+    id: number,
+    updates: Partial<FarmStats>
+  ): Promise<FarmStats | undefined>;
+
   // Reviews
   getReviews(): Promise<Review[]>;
   getReviewsByOrder(orderId: number): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
-  
+
   // AI Recommendations
   getRecommendations(userId: number, type: string): Promise<AIRecommendation[]>;
-  createRecommendation(recommendation: Omit<AIRecommendation, 'id' | 'createdAt'>): Promise<AIRecommendation>;
-  
+  createRecommendation(
+    recommendation: Omit<AIRecommendation, "id" | "createdAt">
+  ): Promise<AIRecommendation>;
+
   // Chat Messages
   getChatMessages(sessionId: string): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
@@ -54,7 +81,7 @@ export class MemStorage implements IStorage {
   private reviews: Map<number, Review> = new Map();
   private aiRecommendations: Map<number, AIRecommendation> = new Map();
   private chatMessages: Map<number, ChatMessage> = new Map();
-  
+
   private currentUserId = 1;
   private currentMenuItemId = 1;
   private currentOrderId = 1;
@@ -73,90 +100,119 @@ export class MemStorage implements IStorage {
       {
         id: 1,
         name: "Garden Fresh Salad",
-        description: "Mixed greens with seasonal vegetables, goat cheese, and herb vinaigrette",
+        description:
+          "Mixed greens with seasonal vegetables, goat cheese, and herb vinaigrette",
         price: 14,
         category: "mains",
-        ingredients: ["mixed greens", "goat cheese", "cherry tomatoes", "cucumber", "herb vinaigrette"],
+        ingredients: [
+          "mixed greens",
+          "goat cheese",
+          "cherry tomatoes",
+          "cucumber",
+          "herb vinaigrette",
+        ],
         allergens: ["dairy"],
         dietary: ["vegetarian", "gluten-free", "organic"],
-        imageUrl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        imageUrl:
+          "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400&q=80",
         available: true,
         seasonalScore: 0.95,
-        popularityScore: 0.85
+        popularityScore: 0.85,
       },
       {
         id: 2,
         name: "Herb Crusted Salmon",
-        description: "Wild-caught salmon with roasted root vegetables and lemon herb sauce",
+        description:
+          "Wild-caught salmon with roasted root vegetables and lemon herb sauce",
         price: 24,
         category: "mains",
-        ingredients: ["wild salmon", "root vegetables", "herbs", "lemon", "olive oil"],
+        ingredients: [
+          "wild salmon",
+          "root vegetables",
+          "herbs",
+          "lemon",
+          "olive oil",
+        ],
         allergens: ["fish"],
         dietary: ["gluten-free", "high-protein"],
-        imageUrl: "https://images.unsplash.com/photo-1485963631004-f2f00b1d6606?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        imageUrl:
+          "https://images.unsplash.com/photo-1485963631004-f2f00b1d6606?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400&q=80",
         available: true,
         seasonalScore: 0.88,
-        popularityScore: 0.92
+        popularityScore: 0.92,
       },
       {
         id: 3,
         name: "Seasonal Vegetable Soup",
-        description: "Daily changing soup made with seasonal vegetables and herbs",
+        description:
+          "Daily changing soup made with seasonal vegetables and herbs",
         price: 9,
         category: "starters",
         ingredients: ["seasonal vegetables", "vegetable broth", "fresh herbs"],
         allergens: [],
         dietary: ["vegan", "gluten-free", "organic"],
-        imageUrl: "https://images.unsplash.com/photo-1547592166-23ac45744acd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        imageUrl:
+          "https://images.unsplash.com/photo-1547592166-23ac45744acd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400&q=80",
         available: true,
         seasonalScore: 1.0,
-        popularityScore: 0.78
+        popularityScore: 0.78,
       },
       {
         id: 4,
         name: "Farm Apple Pie",
-        description: "Made with apples from our orchard partners, served with vanilla cream",
+        description:
+          "Made with apples from our orchard partners, served with vanilla cream",
         price: 8,
         category: "desserts",
         ingredients: ["local apples", "pastry", "vanilla cream", "cinnamon"],
         allergens: ["gluten", "dairy", "eggs"],
         dietary: ["vegetarian"],
-        imageUrl: "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        imageUrl:
+          "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400&q=80",
         available: true,
         seasonalScore: 0.92,
-        popularityScore: 0.88
+        popularityScore: 0.88,
       },
       {
         id: 5,
         name: "Fresh Pressed Juice",
-        description: "Daily selection of fresh-pressed juices from local fruits",
+        description:
+          "Daily selection of fresh-pressed juices from local fruits",
         price: 6,
         category: "beverages",
         ingredients: ["seasonal fruits"],
         allergens: [],
         dietary: ["vegan", "gluten-free", "organic"],
-        imageUrl: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        imageUrl:
+          "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400&q=80",
         available: true,
         seasonalScore: 0.98,
-        popularityScore: 0.75
+        popularityScore: 0.75,
       },
       {
         id: 6,
         name: "Farm Burger",
-        description: "Grass-fed beef with local cheese, greens, and house-made bun",
+        description:
+          "Grass-fed beef with local cheese, greens, and house-made bun",
         price: 18,
         category: "mains",
-        ingredients: ["grass-fed beef", "local cheese", "greens", "house-made bun"],
+        ingredients: [
+          "grass-fed beef",
+          "local cheese",
+          "greens",
+          "house-made bun",
+        ],
         allergens: ["gluten", "dairy"],
         dietary: ["grass-fed"],
-        imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        imageUrl:
+          "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400&q=80",
         available: true,
         seasonalScore: 0.85,
-        popularityScore: 0.95
-      }
+        popularityScore: 0.95,
+      },
     ];
 
-    sampleMenuItems.forEach(item => {
+    sampleMenuItems.forEach((item) => {
       this.menuItems.set(item.id, item);
       this.currentMenuItemId = Math.max(this.currentMenuItemId, item.id + 1);
     });
@@ -177,11 +233,11 @@ export class MemStorage implements IStorage {
           temperature: 75,
           humidity: 65,
           condition: "Clear",
-          forecast: []
+          forecast: [],
         },
         growthRate: 92,
         soilMoisture: 78,
-        sunlightHours: 8.5
+        sunlightHours: 8.5,
       },
       {
         id: 2,
@@ -197,11 +253,11 @@ export class MemStorage implements IStorage {
           temperature: 72,
           humidity: 70,
           condition: "Partly Cloudy",
-          forecast: []
+          forecast: [],
         },
         growthRate: 88,
         soilMoisture: 82,
-        sunlightHours: 7.5
+        sunlightHours: 7.5,
       },
       {
         id: 3,
@@ -217,11 +273,11 @@ export class MemStorage implements IStorage {
           temperature: 78,
           humidity: 60,
           condition: "Sunny",
-          forecast: []
+          forecast: [],
         },
         growthRate: 95,
         soilMoisture: 75,
-        sunlightHours: 9.0
+        sunlightHours: 9.0,
       },
       {
         id: 4,
@@ -237,15 +293,15 @@ export class MemStorage implements IStorage {
           temperature: 73,
           humidity: 68,
           condition: "Clear",
-          forecast: []
+          forecast: [],
         },
         growthRate: 85,
         soilMoisture: 80,
-        sunlightHours: 8.0
-      }
+        sunlightHours: 8.0,
+      },
     ];
 
-    sampleFarmStats.forEach(stats => {
+    sampleFarmStats.forEach((stats) => {
       this.farmStats.set(stats.id, stats);
       this.currentFarmStatsId = Math.max(this.currentFarmStatsId, stats.id + 1);
     });
@@ -257,15 +313,17 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username
+    );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { 
-      ...insertUser, 
+    const user: User = {
+      ...insertUser,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(id, user);
     return user;
@@ -277,7 +335,9 @@ export class MemStorage implements IStorage {
   }
 
   async getMenuItemsByCategory(category: string): Promise<MenuItem[]> {
-    return Array.from(this.menuItems.values()).filter(item => item.category === category);
+    return Array.from(this.menuItems.values()).filter(
+      (item) => item.category === category
+    );
   }
 
   async getMenuItem(id: number): Promise<MenuItem | undefined> {
@@ -291,10 +351,13 @@ export class MemStorage implements IStorage {
     return item;
   }
 
-  async updateMenuItem(id: number, updates: Partial<MenuItem>): Promise<MenuItem | undefined> {
+  async updateMenuItem(
+    id: number,
+    updates: Partial<MenuItem>
+  ): Promise<MenuItem | undefined> {
     const item = this.menuItems.get(id);
     if (!item) return undefined;
-    
+
     const updatedItem = { ...item, ...updates };
     this.menuItems.set(id, updatedItem);
     return updatedItem;
@@ -310,7 +373,9 @@ export class MemStorage implements IStorage {
   }
 
   async getOrdersByUser(userId: number): Promise<Order[]> {
-    return Array.from(this.orders.values()).filter(order => order.userId === userId);
+    return Array.from(this.orders.values()).filter(
+      (order) => order.userId === userId
+    );
   }
 
   async getOrder(id: number): Promise<Order | undefined> {
@@ -319,24 +384,27 @@ export class MemStorage implements IStorage {
 
   async createOrder(insertOrder: InsertOrder): Promise<Order> {
     const id = this.currentOrderId++;
-    const order: Order = { 
-      ...insertOrder, 
+    const order: Order = {
+      ...insertOrder,
       id,
       createdAt: new Date(),
-      completedAt: null
+      completedAt: null,
     };
     this.orders.set(id, order);
     return order;
   }
 
-  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
+  async updateOrderStatus(
+    id: number,
+    status: string
+  ): Promise<Order | undefined> {
     const order = this.orders.get(id);
     if (!order) return undefined;
-    
-    const updatedOrder = { 
-      ...order, 
+
+    const updatedOrder = {
+      ...order,
       status,
-      completedAt: status === 'completed' ? new Date() : order.completedAt
+      completedAt: status === "completed" ? new Date() : order.completedAt,
     };
     this.orders.set(id, updatedOrder);
     return updatedOrder;
@@ -348,7 +416,9 @@ export class MemStorage implements IStorage {
   }
 
   async getFarmStatsByType(cropType: string): Promise<FarmStats[]> {
-    return Array.from(this.farmStats.values()).filter(stats => stats.cropType === cropType);
+    return Array.from(this.farmStats.values()).filter(
+      (stats) => stats.cropType === cropType
+    );
   }
 
   async createFarmStats(insertStats: InsertFarmStats): Promise<FarmStats> {
@@ -358,10 +428,13 @@ export class MemStorage implements IStorage {
     return stats;
   }
 
-  async updateFarmStats(id: number, updates: Partial<FarmStats>): Promise<FarmStats | undefined> {
+  async updateFarmStats(
+    id: number,
+    updates: Partial<FarmStats>
+  ): Promise<FarmStats | undefined> {
     const stats = this.farmStats.get(id);
     if (!stats) return undefined;
-    
+
     const updatedStats = { ...stats, ...updates };
     this.farmStats.set(id, updatedStats);
     return updatedStats;
@@ -373,34 +446,42 @@ export class MemStorage implements IStorage {
   }
 
   async getReviewsByOrder(orderId: number): Promise<Review[]> {
-    return Array.from(this.reviews.values()).filter(review => review.orderId === orderId);
+    return Array.from(this.reviews.values()).filter(
+      (review) => review.orderId === orderId
+    );
   }
 
   async createReview(insertReview: InsertReview): Promise<Review> {
     const id = this.currentReviewId++;
-    const review: Review = { 
-      ...insertReview, 
+    const review: Review = {
+      ...insertReview,
       id,
       createdAt: new Date(),
       sentiment: null,
-      sentimentConfidence: null
+      sentimentConfidence: null,
     };
     this.reviews.set(id, review);
     return review;
   }
 
   // AI Recommendations methods
-  async getRecommendations(userId: number, type: string): Promise<AIRecommendation[]> {
-    return Array.from(this.aiRecommendations.values())
-      .filter(rec => rec.userId === userId && rec.type === type);
+  async getRecommendations(
+    userId: number,
+    type: string
+  ): Promise<AIRecommendation[]> {
+    return Array.from(this.aiRecommendations.values()).filter(
+      (rec) => rec.userId === userId && rec.type === type
+    );
   }
 
-  async createRecommendation(recommendation: Omit<AIRecommendation, 'id' | 'createdAt'>): Promise<AIRecommendation> {
+  async createRecommendation(
+    recommendation: Omit<AIRecommendation, "id" | "createdAt">
+  ): Promise<AIRecommendation> {
     const id = this.currentRecommendationId++;
-    const rec: AIRecommendation = { 
-      ...recommendation, 
+    const rec: AIRecommendation = {
+      ...recommendation,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.aiRecommendations.set(id, rec);
     return rec;
@@ -409,16 +490,20 @@ export class MemStorage implements IStorage {
   // Chat methods
   async getChatMessages(sessionId: string): Promise<ChatMessage[]> {
     return Array.from(this.chatMessages.values())
-      .filter(msg => msg.sessionId === sessionId)
-      .sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+      .filter((msg) => msg.sessionId === sessionId)
+      .sort(
+        (a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0)
+      );
   }
 
-  async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
+  async createChatMessage(
+    insertMessage: InsertChatMessage
+  ): Promise<ChatMessage> {
     const id = this.currentChatMessageId++;
-    const message: ChatMessage = { 
-      ...insertMessage, 
+    const message: ChatMessage = {
+      ...insertMessage,
       id,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
     this.chatMessages.set(id, message);
     return message;
