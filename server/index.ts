@@ -6,6 +6,7 @@ import { setupVite, serveStatic, log } from "./vite";
 if (!process.env.DATABASE_URL) {
   log("WARNING: DATABASE_URL not set, using in-memory storage", "config");
 }
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -40,42 +41,53 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+// Initialize the app
+let isInitialized = false;
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+const initializeApp = async () => {
+  if (!isInitialized) {
+    const server = await registerRoutes(app);
 
-    res.status(status).json({ message });
-    throw err;
-  });
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+      res.status(status).json({ message });
+      throw err;
+    });
+
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // For Vercel deployment, export the app instead of starting a server
+    if (process.env.NODE_ENV !== "production") {
+      // Development mode - start server
+      const port = parseInt(process.env.PORT || "5000", 10);
+      server.listen(
+        {
+          port,
+          host: "0.0.0.0",
+          reusePort: true,
+        },
+        () => {
+          log(`serving on port ${port}`);
+        }
+      );
+    }
+
+    isInitialized = true;
   }
+  return app;
+};
 
-  // For Vercel deployment, export the app instead of starting a server
-  if (process.env.NODE_ENV !== "production") {
-    // Development mode - start server
-    const port = parseInt(process.env.PORT || "5000", 10);
-    server.listen(
-      {
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      },
-      () => {
-        log(`serving on port ${port}`);
-      }
-    );
-  }
-
-  // Export for Vercel
-  export default app;
-})();
+// Export for Vercel
+export default async (req: any, res: any) => {
+  const app = await initializeApp();
+  return app(req, res);
+};
