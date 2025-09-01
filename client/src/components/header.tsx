@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Menu, ShoppingCart, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { useApp } from "@/context/app-context";
+import CartSidebar from "@/components/cart-sidebar";
 
 export default function Header() {
   const [location] = useLocation();
@@ -20,7 +20,7 @@ export default function Header() {
     { name: "Contact", href: "/contact" },
   ];
 
-  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+
 
   const isActive = (href: string) => {
     if (href === "/" && location === "/") return true;
@@ -59,17 +59,7 @@ export default function Header() {
           {/* Actions */}
           <div className="flex items-center space-x-4">
             {/* Cart Button */}
-            <Button variant="ghost" size="sm" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-sage hover:bg-sage/90"
-                >
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
+            <CartSidebar />
 
             {/* User Button */}
             <Button variant="ghost" size="sm">

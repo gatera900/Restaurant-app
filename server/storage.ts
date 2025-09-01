@@ -305,6 +305,84 @@ export class MemStorage implements IStorage {
       this.farmStats.set(stats.id, stats);
       this.currentFarmStatsId = Math.max(this.currentFarmStatsId, stats.id + 1);
     });
+
+    // Initialize with sample orders
+    const sampleOrders: Order[] = [
+      {
+        id: 1,
+        userId: 1,
+        status: "completed",
+        total: 42.0,
+        items: [
+          {
+            menuItemId: 1,
+            name: "Garden Fresh Salad",
+            price: 14.0,
+            quantity: 2,
+          },
+          {
+            menuItemId: 2,
+            name: "Herb Crusted Salmon",
+            price: 24.0,
+            quantity: 1,
+          },
+        ],
+        specialInstructions: "Extra dressing on the side",
+        estimatedTime: 25,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 25 * 60 * 1000),
+      },
+      {
+        id: 2,
+        userId: 1,
+        status: "preparing",
+        total: 27.0,
+        items: [
+          {
+            menuItemId: 3,
+            name: "Seasonal Vegetable Soup",
+            price: 9.0,
+            quantity: 1,
+          },
+          {
+            menuItemId: 6,
+            name: "Farm Burger",
+            price: 18.0,
+            quantity: 1,
+          },
+        ],
+        estimatedTime: 20,
+        createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+        completedAt: null,
+      },
+      {
+        id: 3,
+        userId: 2,
+        status: "pending",
+        total: 14.0,
+        items: [
+          {
+            menuItemId: 4,
+            name: "Farm Apple Pie",
+            price: 8.0,
+            quantity: 1,
+          },
+          {
+            menuItemId: 5,
+            name: "Fresh Pressed Juice",
+            price: 6.0,
+            quantity: 1,
+          },
+        ],
+        createdAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+        completedAt: null,
+      },
+    ];
+
+    sampleOrders.forEach((order) => {
+      this.orders.set(order.id, order);
+      this.currentOrderId = Math.max(this.currentOrderId, order.id + 1);
+    });
   }
 
   // User methods
